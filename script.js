@@ -19,6 +19,11 @@ class qImage extends BlockEmbed {
     };
   }
 
+  remove() {
+    super.remove();
+    updateTitles();
+  }
+
   format(_, value) {
     this.domNode.append(value);
   }
@@ -26,6 +31,20 @@ class qImage extends BlockEmbed {
 
 Quill.register(qImage);
 
+function updateTitles() {
+  let qImages = document.getElementsByTagName("q-img-text");
+  // Iterate over all qImages below the one that was changed
+  // and update the title
+  for (let i = qImages.length - 1; i >= 0; i--) {
+    if (i === parseInt(qImages[i].querySelector("img").getAttribute("title")))
+      return;
+    if (i === 0) {
+      qImages[i].querySelector("img").removeAttribute("title");
+    } else {
+      qImages[i].querySelector("img").setAttribute("title", i.toString());
+    }
+  }
+}
 
 // Initialize quill
 let quill = new Quill("#editor", {
@@ -63,6 +82,18 @@ window.onload = () => {
   // Add functionality to text confirm button
   document.getElementById("confirm-text-button").onclick = addText;
 };
+
+function handleTextChange(delta) {
+  for (let op in delta.ops) {
+    // Check whether qImage was inserted
+    if (delta.ops[op].insert && delta.ops[op].insert.qImage) {
+      return updateTitles();
+    }
+  }
+}
+
+// On text-change handler to update title attributes
+quill.on("text-change", handleTextChange);
 
 // Drag and drop handler
 function handleDrop(event) {
